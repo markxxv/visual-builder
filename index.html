@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WYSIWYG Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style type="text/tailwindcss">
+        /* Base editor styles */
+        [contenteditable="true"] {
+            outline: none;
+        }
+
+        [contenteditable="true"]:focus {
+            @apply bg-yellow-100;
+        }
+
+        .sr-only {
+            @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+            clip: rect(0, 0, 0, 0);
+        }
+
+        /* Grid item controls */
+        [data-grid-section] > * {
+            @apply relative;
+        }
+
+        [data-grid-section] > *:hover .grid-item-delete {
+            @apply opacity-100;
+        }
+
+        .grid-item-delete {
+            @apply absolute top-2 right-2 opacity-0 transition-opacity z-[5] pointer-events-auto;
+        }
+
+        .section-controls {
+            @apply z-20;
+        }
+
+        /* Text Block Section */
+        .text_block {
+            @apply space-y-6 mt-12;
+        }
+
+        .text_block h2 {
+            @apply text-2xl font-semibold;
+        }
+
+        .text_block .content {
+            @apply space-y-4 text-gray-600 leading-relaxed;
+        }
+
+        /* Prose styles only for text_block */
+        .text_block.prose h2 {
+            @apply text-2xl font-bold mt-4 mb-2;
+        }
+
+        .text_block.prose h3 {
+            @apply text-xl font-semibold mt-4 mb-2;
+        }
+
+        .text_block.prose h4 {
+            @apply text-lg font-semibold mt-4 mb-2;
+        }
+
+        .text_block.prose p {
+            @apply mt-2 mb-2;
+        }
+
+        .text_block.prose ul, .text_block.prose ol {
+            @apply mt-2 mb-2 pl-6;
+        }
+
+        .text_block.prose ul {
+            @apply list-disc;
+        }
+
+        .text_block.prose ol {
+            @apply list-decimal;
+        }
+
+        .text_block.prose li {
+            @apply mt-1 mb-1;
+        }
+
+        /* Stats Cards Section */
+        .stats_cards .card {
+            @apply bg-white border border-gray-100 rounded-lg p-6;
+        }
+
+        .stats_cards .card_value {
+            @apply text-3xl font-bold text-red-500 mb-2;
+        }
+
+        .stats_cards .card_label {
+            @apply text-sm text-gray-600;
+        }
+
+        /* Icon Cards Section */
+        .icon_cards .card {
+            @apply bg-white border border-gray-100 rounded-lg p-6;
+        }
+
+        .icon_cards .card_inner {
+            @apply flex items-start;
+        }
+
+        .icon_cards .icon_wrapper {
+            @apply bg-red-50 rounded-lg p-3 mr-4;
+        }
+
+        .icon_cards .icon {
+            @apply w-6 h-6 text-red-400;
+        }
+
+        .icon_cards .card_title {
+            @apply font-semibold mb-2 text-sm;
+        }
+
+        .icon_cards .card_description {
+            @apply text-sm text-gray-600;
+        }
+
+        /* Price Section */
+        .price_section {
+            @apply space-y-6;
+        }
+
+        .price_section h2 {
+            @apply text-2xl font-semibold;
+        }
+
+        .price_section .price_card {
+            @apply bg-gray-50 border border-gray-100 rounded-lg p-6;
+        }
+
+        .price_section .price_header {
+            @apply text-center mb-6;
+        }
+
+        .price_section .price_label {
+            @apply text-sm text-gray-600 mb-2;
+        }
+
+        .price_section .price_value {
+            @apply text-5xl font-bold text-red-500;
+        }
+
+        .price_section .payment_steps {
+            @apply bg-white rounded-lg p-6 space-y-4;
+        }
+
+        .price_section .payment_title {
+            @apply text-sm font-medium text-gray-700 mb-3;
+        }
+
+        .price_section .payment_row {
+            @apply flex items-center justify-between py-3 border-b border-gray-100;
+        }
+
+        .price_section .payment_row:last-child {
+            @apply border-b-0;
+        }
+
+        .price_section .payment_label {
+            @apply flex items-start;
+        }
+
+        .price_section .checkmark {
+            @apply w-5 h-5 text-red-400 mr-3 mt-0.5 shrink-0;
+        }
+
+        .price_section .payment_text {
+            @apply text-sm text-gray-600;
+        }
+
+        .price_section .payment_amount {
+            @apply text-lg font-semibold text-gray-900;
+        }
+
+        .price_section .price_note {
+            @apply text-xs text-gray-500 text-center mt-4;
+        }
+
+        /* Expenses Section */
+        .expenses_section {
+            @apply space-y-6;
+        }
+
+        .expenses_section h2 {
+            @apply text-2xl font-semibold;
+        }
+
+        .expenses_section .expenses_card {
+            @apply bg-gray-50 rounded-lg p-6 border border-gray-200;
+        }
+
+        .expenses_section .expenses_title {
+            @apply text-sm font-medium text-gray-700 mb-4;
+        }
+
+        .expenses_section .expenses_list {
+            @apply space-y-2;
+        }
+
+        .expenses_section .expense_item {
+            @apply flex items-start;
+        }
+
+        .expenses_section .arrow_icon {
+            @apply w-4 h-4 text-gray-400 mr-2 mt-0.5 shrink-0;
+        }
+
+        .expenses_section .expense_text {
+            @apply text-sm text-gray-600;
+        }
+
+        /* Process Steps Section */
+        .process_steps {
+            @apply space-y-6;
+        }
+
+        .process_steps h2 {
+            @apply text-2xl font-semibold;
+        }
+
+        .process_steps .step {
+            @apply flex items-start;
+        }
+
+        .process_steps .step_number {
+            @apply bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shrink-0 mr-4 font-semibold text-sm;
+        }
+
+        .process_steps .step_content {
+            @apply pt-1;
+        }
+
+        .process_steps .step_title {
+            @apply font-semibold mb-1;
+        }
+
+        .process_steps .step_description {
+            @apply text-sm text-gray-600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div x-data="editorApp()" class="min-h-screen">
+        <!-- SVG Edit Modal -->
+        <div 
+            x-show="svgModalOpen" 
+            @click.self="svgModalOpen = false"
+            x-transition.opacity
+            class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            style="display: none;"
+        >
+            <div 
+                class="bg-white rounded-lg p-6 max-w-2xl w-full"
+                @click.stop
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Edit SVG Icon</h3>
+                    <button 
+                        @click="svgModalOpen = false"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <textarea 
+                    x-model="currentSvgCode"
+                    class="w-full h-64 border border-gray-300 rounded-md p-3 font-mono text-sm"
+                    placeholder="Paste SVG code here..."
+                ></textarea>
+                
+                <div class="flex justify-end gap-2 mt-4">
+                    <button 
+                        @click="svgModalOpen = false"
+                        class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        @click="updateSvg()"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                        Apply
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawer overlay -->
+        <div 
+            x-show="drawerOpen" 
+            @click="drawerOpen = false"
+            x-transition.opacity
+            class="fixed inset-0 bg-black bg-opacity-30 z-40"
+        ></div>
+
+        <!-- Drawer -->
+        <div 
+            x-show="drawerOpen"
+            x-transition:enter="transform transition ease-out duration-300"
+            x-transition:enter-start="-translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transform transition ease-in duration-200"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
+            class="fixed top-0 left-0 h-full w-80 bg-white z-50 overflow-y-auto border-r border-gray-200"
+        >
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">Templates</h2>
+                    <button 
+                        @click="drawerOpen = false"
+                        class="text-gray-400 hover:text-gray-600"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="(template, index) in templates" :key="index">
+                        <button 
+                            @click="addSection(template); drawerOpen = false"
+                            class="w-full text-left border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                        >
+                            <img :src="template.image" :alt="template.name" class="w-full h-32 object-cover object-left rounded-t-lg">
+                            <div class="p-3">
+                                <p class="font-medium text-gray-900" x-text="template.name"></p>
+                            </div>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="max-w-4xl mx-auto py-8 px-4">
+            <!-- Canvas with toolbar inside -->
+            <div class="bg-white border border-gray-200 rounded-lg min-h-[600px]">
+                <!-- Toolbar - sticky inside canvas -->
+                <div class="sticky top-0 z-10 bg-white border-b border-gray-200 rounded-t-lg">
+                    <div class="flex items-center gap-2 p-3 flex-wrap">
+                        <!-- Templates button -->
+                        <button 
+                            @click="drawerOpen = true"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700"
+                        >
+                            Templates
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300"></div>
+
+                        <!-- Undo/Redo buttons -->
+                        <button 
+                            @click="undo()"
+                            :disabled="!canUndo"
+                            :class="!canUndo ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md transition-colors"
+                            title="Undo (Ctrl+Z)"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M9 14l-4 -4l4 -4" />
+                                <path d="M5 10h11a4 4 0 1 1 0 8h-1" />
+                            </svg>
+                        </button>
+
+                        <button 
+                            @click="redo()"
+                            :disabled="!canRedo"
+                            :class="!canRedo ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50'"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md transition-colors"
+                            title="Redo (Ctrl+Y)"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M15 14l4 -4l-4 -4" />
+                                <path d="M19 10h-11a4 4 0 1 0 0 8h1" />
+                            </svg>
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300"></div>
+
+                        <!-- Format buttons -->
+                        <button 
+                            @click="formatText('bold')" 
+                            title="Bold"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                            <strong class="text-sm">B</strong>
+                        </button>
+
+                        <button 
+                            @click="formatText('italic')" 
+                            title="Italic"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                            <em class="text-sm">I</em>
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300"></div>
+
+                        <button 
+                            @click="formatText('h2')" 
+                            title="Heading H2"
+                            class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                        >
+                            H2
+                        </button>
+
+                        <button 
+                            @click="formatText('h3')" 
+                            title="Heading H3"
+                            class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                        >
+                            H3
+                        </button>
+
+                        <button 
+                            @click="formatText('h4')" 
+                            title="Heading H4"
+                            class="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                        >
+                            H4
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300"></div>
+
+                        <button 
+                            @click="formatText('insertUnorderedList')" 
+                            title="Bulleted List"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                            <span class="text-sm">•</span>
+                        </button>
+
+                        <button 
+                            @click="formatText('insertOrderedList')" 
+                            title="Numbered List"
+                            class="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                        >
+                            <span class="text-sm">1.</span>
+                        </button>
+
+                        <div class="w-px h-6 bg-gray-300"></div>
+
+                        <button 
+                            @click="saveToConsole()"
+                            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium text-gray-700"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content area -->
+                <div class="p-8">
+                    <template x-for="(section, index) in sections" :key="section.id">
+                        <div class="relative group mb-6 p-6 border-2 border-transparent rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-all">
+                            <!-- Section controls -->
+                            <div class="section-controls absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <!-- Column selector for grid sections -->
+                                <template x-if="section.hasColumnSelector">
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button 
+                                            @click="open = !open"
+                                            @click.outside="open = false"
+                                            class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
+                                            title="Column Count"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <rect x="4" y="4" width="6" height="6" rx="1" />
+                                                <rect x="14" y="4" width="6" height="6" rx="1" />
+                                                <rect x="4" y="14" width="6" height="6" rx="1" />
+                                                <rect x="14" y="14" width="6" height="6" rx="1" />
+                                            </svg>
+                                        </button>
+                                        
+                                        <!-- Popover -->
+                                        <div 
+                                            x-show="open"
+                                            x-transition
+                                            class="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 z-50 min-w-[200px]"
+                                            style="display: none;"
+                                        >
+                                            <p class="text-xs font-medium text-gray-700 mb-3">Columns per row:</p>
+                                            <div class="flex items-center justify-between bg-gray-50 rounded-lg p-1">
+                                                <template x-for="col in [1, 2, 3, 4, 6]" :key="col">
+                                                    <label 
+                                                        class="flex items-center justify-center w-10 h-10 cursor-pointer rounded transition-colors"
+                                                        :class="section.columns === col ? 'bg-white border border-gray-300' : 'hover:bg-gray-100'"
+                                                    >
+                                                        <input 
+                                                            type="radio" 
+                                                            :value="col"
+                                                            x-model.number="section.columns"
+                                                            @change="updateColumns(index, col)"
+                                                            class="sr-only"
+                                                        >
+                                                        <span 
+                                                            class="text-sm font-medium"
+                                                            :class="section.columns === col ? 'text-gray-900' : 'text-gray-500'"
+                                                            x-text="col"
+                                                        ></span>
+                                                    </label>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Add item button for grid sections -->
+                                <template x-if="section.hasColumnSelector">
+                                    <button 
+                                        @click="addGridItem(index)"
+                                        class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
+                                        title="Add Block"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M12 5l0 14" />
+                                            <path d="M5 12l14 0" />
+                                        </svg>
+                                    </button>
+                                </template>
+                                
+                                <button 
+                                    @click="moveSection(index, -1)" 
+                                    :disabled="index === 0"
+                                    :class="index === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'"
+                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white transition-colors"
+                                >
+                                    ↑
+                                </button>
+                                <button 
+                                    @click="moveSection(index, 1)" 
+                                    :disabled="index === sections.length - 1"
+                                    :class="index === sections.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'"
+                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white transition-colors"
+                                >
+                                    ↓
+                                </button>
+                                <button 
+                                    @click="removeSection(index)"
+                                    class="w-8 h-8 flex items-center justify-center border border-red-300 rounded bg-white hover:bg-red-50 text-red-600 transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <!-- Editable content -->
+                            <div 
+                                x-html="section.html" 
+                                contenteditable="true" 
+                                @blur="updateSection(index, $event)"
+                            ></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function editorApp() {
+            return {
+                drawerOpen: false,
+                svgModalOpen: false,
+                currentSvgCode: '',
+                currentSvgElement: null,
+                history: [],
+                historyIndex: -1,
+                templates: [
+                    {
+                        name: 'Text Block',
+                        image: 'img/01_text.png',
+                        hasColumnSelector: false,
+                        html: `
+                            <section class="text_block prose">
+                                <h2 contenteditable="true">Section Heading</h2>
+                                <div class="content">
+                                    <p contenteditable="true">Click here to edit the paragraph content. You can write any text you want.</p>
+                                </div>
+                            </section>
+                        `
+                    },
+                    {
+                        name: 'Stats & Numbers',
+                        image: 'img/02_stats.png',
+                        hasColumnSelector: true,
+                        defaultColumns: 2,
+                        itemTemplate: `
+                            <div class="card">
+                                <div class="card_value" contenteditable="true">0%</div>
+                                <p class="card_label" contenteditable="true">Description</p>
+                            </div>
+                        `,
+                        html: `
+                            <section class="stats_cards grid grid-cols-1 gap-4" data-grid-section>
+                                <div class="card">
+                                    <div class="card_value" contenteditable="true">from 0.7%</div>
+                                    <p class="card_label" contenteditable="true">Floating rate</p>
+                                </div>
+                                <div class="card">
+                                    <div class="card_value" contenteditable="true">from 2.5%</div>
+                                    <p class="card_label" contenteditable="true">Fixed rate</p>
+                                </div>
+                                <div class="card">
+                                    <div class="card_value" contenteditable="true">up to 50%</div>
+                                    <p class="card_label" contenteditable="true">Of value for non-residents</p>
+                                </div>
+                                <div class="card">
+                                    <div class="card_value" contenteditable="true">up to 80%</div>
+                                    <p class="card_label" contenteditable="true">Of value for residents</p>
+                                </div>
+                            </section>
+                        `
+                    },
+                    {
+                        name: 'Icon Cards',
+                        image: 'img/03_icons.png',
+                        hasColumnSelector: true,
+                        defaultColumns: 2,
+                        itemTemplate: `
+                            <div class="card">
+                                <div class="card_inner">
+                                    <div class="icon_wrapper">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 17h6"></path><path d="M9 13h6"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="card_title" contenteditable="true">Card Title</h3>
+                                        <p class="card_description" contenteditable="true">Description of feature or service</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        html: `
+                            <section class="icon_cards grid grid-cols-1 gap-4" data-grid-section>
+                                <div class="card">
+                                    <div class="card_inner">
+                                        <div class="icon_wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M9 17h6"></path><path d="M9 13h6"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="card_title" contenteditable="true">Document Preparation</h3>
+                                            <p class="card_description" contenteditable="true">Remote collection of all necessary documents</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card_inner">
+                                        <div class="icon_wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M5 8v-3a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5"></path><path d="M6 14m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path><path d="M4.5 17l-1.5 5l3 -1.5l3 1.5l-1.5 -5"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="card_title" contenteditable="true">Notarial Services</h3>
+                                            <p class="card_description" contenteditable="true">Notarization of documents when needed</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        `
+                    },
+                    {
+                        name: 'Price Details',
+                        image: 'img/04_price.png',
+                        hasColumnSelector: false,
+                        html: `
+                            <section class="price_section">
+                                <h2 contenteditable="true">Price & Payment Terms</h2>
+                                <div class="price_card">
+                                    <div class="price_header">
+                                        <p class="price_label">Service cost</p>
+                                        <div class="price_value" contenteditable="true">1,500 €</div>
+                                    </div>
+                                    <div class="payment_steps">
+                                        <p class="payment_title" contenteditable="true">Payment schedule:</p>
+                                        <div class="payment_row">
+                                            <div class="payment_label">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="checkmark" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                                <span class="payment_text" contenteditable="true">At start of work</span>
+                                            </div>
+                                            <span class="payment_amount" contenteditable="true">500 €</span>
+                                        </div>
+                                        <div class="payment_row">
+                                            <div class="payment_label">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="checkmark" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10" /></svg>
+                                                <span class="payment_text" contenteditable="true">Upon deal signing</span>
+                                            </div>
+                                            <span class="payment_amount" contenteditable="true">1,000 €</span>
+                                        </div>
+                                    </div>
+                                    <p class="price_note" contenteditable="true">Service validity period — unlimited</p>
+                                </div>
+                            </section>
+                        `
+                    },
+                    {
+                        name: 'Additional Expenses',
+                        image: 'img/05_adds.png',
+                        hasColumnSelector: false,
+                        html: `
+                            <article class="expenses_section">
+                                <h2 contenteditable="true">Additional Expenses</h2>
+                                <div class="expenses_card">
+                                    <p class="expenses_title" contenteditable="true">Not included in price:</p>
+                                    <div class="expenses_list">
+                                        <div class="expense_item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="arrow_icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5l6 6l-6 6" /></svg>
+                                            <span class="expense_text" contenteditable="true">Consular fees</span>
+                                        </div>
+                                        <div class="expense_item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="arrow_icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5l6 6l-6 6" /></svg>
+                                            <span class="expense_text" contenteditable="true">Document translation</span>
+                                        </div>
+                                        <div class="expense_item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="arrow_icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5l6 6l-6 6" /></svg>
+                                            <span class="expense_text" contenteditable="true">Document legalization</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        `
+                    },
+                    {
+                        name: 'Process Steps',
+                        image: 'img/06_steps.png',
+                        hasColumnSelector: true,
+                        defaultColumns: 1,
+                        itemTemplate: `
+                            <div class="step">
+                                <div class="step_number" contenteditable="true">1</div>
+                                <div class="step_content">
+                                    <h3 class="step_title" contenteditable="true">New Step</h3>
+                                    <p class="step_description" contenteditable="true">Process stage description</p>
+                                </div>
+                            </div>
+                        `,
+                        html: `
+                            <article class="process_steps">
+                                <h2 contenteditable="true">How It Works</h2>
+                                <div class="grid grid-cols-1 gap-4" data-grid-section>
+                                    <div class="step">
+                                        <div class="step_number" contenteditable="true">1</div>
+                                        <div class="step_content">
+                                            <h3 class="step_title" contenteditable="true">First Step</h3>
+                                            <p class="step_description" contenteditable="true">Description of the first process stage</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <div class="step_number" contenteditable="true">2</div>
+                                        <div class="step_content">
+                                            <h3 class="step_title" contenteditable="true">Second Step</h3>
+                                            <p class="step_description" contenteditable="true">Description of the second process stage</p>
+                                        </div>
+                                    </div>
+                                    <div class="step">
+                                        <div class="step_number" contenteditable="true">3</div>
+                                        <div class="step_content">
+                                            <h3 class="step_title" contenteditable="true">Third Step</h3>
+                                            <p class="step_description" contenteditable="true">Description of the third process stage</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        `
+                    }
+                ],
+                sections: [],
+                nextId: 1,
+
+                get canUndo() {
+                    return this.historyIndex > 0;
+                },
+
+                get canRedo() {
+                    return this.historyIndex < this.history.length - 1;
+                },
+
+                init() {
+                    this.addSection(this.templates[0]);
+                    this.saveState();
+                    
+                    document.addEventListener('keydown', (e) => {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                            e.preventDefault();
+                            this.undo();
+                        } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                            e.preventDefault();
+                            this.redo();
+                        }
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        const svgElement = e.target.closest('svg');
+                        if (svgElement && svgElement.closest('.icon_wrapper') && !svgElement.closest('.absolute')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.openSvgModal(svgElement);
+                        }
+                    });
+
+                    this.$watch('sections', () => {
+                        this.$nextTick(() => {
+                            this.addDeleteButtonsToGridItems();
+                        });
+                    }, { deep: true });
+
+                    document.addEventListener('click', (e) => {
+                        if (e.target.closest('.grid-item-delete')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const deleteBtn = e.target.closest('.grid-item-delete');
+                            const gridItem = deleteBtn.parentElement;
+                            const gridSection = gridItem.parentElement;
+                            const sectionElement = gridSection.closest('.relative.group');
+                            
+                            const allSections = Array.from(document.querySelectorAll('.relative.group'));
+                            const sectionIndex = allSections.indexOf(sectionElement);
+                            
+                            const gridItems = Array.from(gridSection.children);
+                            const itemIndex = gridItems.indexOf(gridItem);
+                            
+                            if (sectionIndex !== -1 && itemIndex !== -1) {
+                                gridItem.remove();
+                                
+                                const contentElement = sectionElement.querySelector('[contenteditable]');
+                                if (contentElement) {
+                                    this.sections[sectionIndex].html = contentElement.innerHTML;
+                                    this.saveState();
+                                }
+                            }
+                        }
+                    });
+                },
+
+                addDeleteButtonsToGridItems() {
+                    const gridSections = document.querySelectorAll('[data-grid-section]');
+                    gridSections.forEach((grid) => {
+                        const items = Array.from(grid.children);
+                        items.forEach((item) => {
+                            if (!item.querySelector('.grid-item-delete')) {
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'grid-item-delete w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs';
+                                deleteBtn.innerHTML = '✕';
+                                deleteBtn.type = 'button';
+                                item.appendChild(deleteBtn);
+                            }
+                        });
+                    });
+                },
+
+                saveState() {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                    this.history.push(JSON.parse(JSON.stringify(this.sections)));
+                    this.historyIndex++;
+                    
+                    if (this.history.length > 50) {
+                        this.history.shift();
+                        this.historyIndex--;
+                    }
+                },
+
+                undo() {
+                    if (!this.canUndo) return;
+                    
+                    this.historyIndex--;
+                    this.sections = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+                    
+                    this.$nextTick(() => {
+                        this.sections.forEach((section, index) => {
+                            if (section.hasColumnSelector) {
+                                this.applyGridColumns(index, section.columns);
+                            }
+                        });
+                    });
+                },
+
+                redo() {
+                    if (!this.canRedo) return;
+                    
+                    this.historyIndex++;
+                    this.sections = JSON.parse(JSON.stringify(this.history[this.historyIndex]));
+                    
+                    this.$nextTick(() => {
+                        this.sections.forEach((section, index) => {
+                            if (section.hasColumnSelector) {
+                                this.applyGridColumns(index, section.columns);
+                            }
+                        });
+                    });
+                },
+
+                openSvgModal(svgElement) {
+                    this.currentSvgElement = svgElement;
+                    this.currentSvgCode = svgElement.outerHTML;
+                    this.svgModalOpen = true;
+                },
+
+                updateSvg() {
+                    if (!this.currentSvgElement || !this.currentSvgCode) return;
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = this.currentSvgCode.trim();
+                    const newSvg = tempDiv.querySelector('svg');
+                    
+                    if (newSvg) {
+                        this.currentSvgElement.parentNode.replaceChild(newSvg, this.currentSvgElement);
+                        
+                        const sectionElement = newSvg.closest('.relative.group');
+                        if (sectionElement) {
+                            const allSections = document.querySelectorAll('.relative.group');
+                            const index = Array.from(allSections).indexOf(sectionElement);
+                            if (index !== -1) {
+                                const contentElement = sectionElement.querySelector('[contenteditable]');
+                                if (contentElement) {
+                                    this.sections[index].html = contentElement.innerHTML;
+                                    this.saveState();
+                                }
+                            }
+                        }
+                    }
+                    
+                    this.svgModalOpen = false;
+                    this.currentSvgElement = null;
+                    this.currentSvgCode = '';
+                },
+
+                saveToConsole() {
+                    const state = JSON.stringify(this.sections, null, 2);
+                    console.log('Current Editor State:', state);
+                    console.log('To load this state, use: loadState(data)');
+                    return state;
+                },
+
+                loadState(data) {
+                    this.sections = JSON.parse(JSON.stringify(data));
+                    this.saveState();
+                    this.$nextTick(() => {
+                        this.sections.forEach((section, index) => {
+                            if (section.hasColumnSelector) {
+                                this.applyGridColumns(index, section.columns);
+                            }
+                        });
+                    });
+                },
+
+                addSection(template) {
+                    const section = {
+                        id: this.nextId++,
+                        name: template.name,
+                        html: template.html,
+                        hasColumnSelector: template.hasColumnSelector || false,
+                        columns: template.defaultColumns || 2,
+                        itemTemplate: template.itemTemplate || ''
+                    };
+                    this.sections.push(section);
+                    
+                    if (section.hasColumnSelector) {
+                        this.$nextTick(() => {
+                            this.applyGridColumns(this.sections.length - 1, section.columns);
+                            this.saveState();
+                        });
+                    } else {
+                        this.saveState();
+                    }
+                },
+
+                removeSection(index) {
+                    this.sections.splice(index, 1);
+                    this.saveState();
+                },
+
+                moveSection(index, direction) {
+                    const newIndex = index + direction;
+                    if (newIndex >= 0 && newIndex < this.sections.length) {
+                        const temp = this.sections[index];
+                        this.sections[index] = this.sections[newIndex];
+                        this.sections[newIndex] = temp;
+                        this.saveState();
+                    }
+                },
+
+                updateSection(index, event) {
+                    this.sections[index].html = event.target.innerHTML;
+                    this.saveState();
+                },
+
+                addGridItem(index) {
+                    const section = this.sections[index];
+                    if (!section.itemTemplate) return;
+                    
+                    const sectionElements = document.querySelectorAll('.relative.group');
+                    if (!sectionElements[index]) return;
+                    
+                    const gridElement = sectionElements[index].querySelector('[data-grid-section]');
+                    if (!gridElement) return;
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = section.itemTemplate.trim();
+                    const newItem = tempDiv.firstChild;
+                    
+                    gridElement.appendChild(newItem);
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'grid-item-delete w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs';
+                    deleteBtn.innerHTML = '✕';
+                    deleteBtn.type = 'button';
+                    newItem.appendChild(deleteBtn);
+                    
+                    this.sections[index].html = sectionElements[index].querySelector('[contenteditable]').innerHTML;
+                    this.saveState();
+                },
+
+                updateColumns(index, columns) {
+                    this.sections[index].columns = columns;
+                    this.applyGridColumns(index, columns);
+                    this.saveState();
+                },
+
+                applyGridColumns(index, columns) {
+                    const sectionElements = document.querySelectorAll('.relative.group');
+                    if (!sectionElements[index]) return;
+                    
+                    const gridElement = sectionElements[index].querySelector('[data-grid-section]');
+                    if (!gridElement) return;
+                    
+                    gridElement.classList.remove('lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:grid-cols-4', 'lg:grid-cols-6');
+                    gridElement.classList.add(`lg:grid-cols-${columns}`);
+                    
+                    this.sections[index].html = sectionElements[index].querySelector('[contenteditable]').innerHTML;
+                },
+
+                formatText(command) {
+                    if (command === 'h2' || command === 'h3' || command === 'h4') {
+                        const selection = window.getSelection();
+                        if (!selection.rangeCount) return;
+                        
+                        const range = selection.getRangeAt(0);
+                        let element = range.commonAncestorContainer;
+                        
+                        if (element.nodeType === 3) {
+                            element = element.parentElement;
+                        }
+                        
+                        let targetElement = element;
+                        while (targetElement && !['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'DIV'].includes(targetElement.tagName)) {
+                            targetElement = targetElement.parentElement;
+                        }
+                        
+                        if (!targetElement) {
+                            document.execCommand('formatBlock', false, command);
+                            return;
+                        }
+                        
+                        const headingClasses = {
+                            'h2': 'text-2xl font-semibold',
+                            'h3': 'text-xl font-semibold',
+                            'h4': 'text-lg font-semibold'
+                        };
+                        
+                        if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(targetElement.tagName)) {
+                            const newElement = document.createElement(command);
+                            newElement.innerHTML = targetElement.innerHTML;
+                            newElement.className = '';
+                            newElement.className = headingClasses[command];
+                            
+                            if (targetElement.hasAttribute('contenteditable')) {
+                                newElement.setAttribute('contenteditable', 'true');
+                            }
+                            
+                            targetElement.parentNode.replaceChild(newElement, targetElement);
+                        } else {
+                            const newElement = document.createElement(command);
+                            newElement.innerHTML = targetElement.innerHTML;
+                            newElement.className = headingClasses[command];
+                            
+                            if (targetElement.hasAttribute('contenteditable')) {
+                                newElement.setAttribute('contenteditable', 'true');
+                            }
+                            
+                            targetElement.parentNode.replaceChild(newElement, targetElement);
+                        }
+                        
+                        return;
+                    }
+                    
+                    if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+                        const selection = window.getSelection();
+                        if (!selection.rangeCount) return;
+                        
+                        const range = selection.getRangeAt(0);
+                        
+                        let editableElement = range.commonAncestorContainer;
+                        if (editableElement.nodeType === 3) {
+                            editableElement = editableElement.parentElement;
+                        }
+                        while (editableElement && editableElement.getAttribute('contenteditable') !== 'true') {
+                            editableElement = editableElement.parentElement;
+                        }
+                        
+                        if (!editableElement) return;
+                        
+                        editableElement.focus();
+                        document.execCommand(command, false, null);
+                        
+                        return;
+                    }
+                    
+                    document.execCommand(command, false, null);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
