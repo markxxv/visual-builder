@@ -301,7 +301,7 @@
             x-show="drawerOpen"
             @click="closeDrawer()"
             x-transition.opacity.duration.200ms
-            class="fixed inset-0 z-40 bg-zinc-950/20"
+            class="fixed inset-0 z-40 bg-zinc-950 opacity-20"
             style="display: none;"
         ></div>
 
@@ -315,7 +315,7 @@
             x-transition:leave="transform transition ease-in duration-150"
             x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 z-50 flex w-[360px] max-w-[calc(100vw-16px)] flex-col bg-white shadow-xl shadow-zinc-950/5"
+            class="fixed inset-y-0 left-0 z-50 flex w-[360px] max-w-[calc(100vw-16px)] flex-col bg-white shadow-xl"
             style="display: none;"
             aria-label="Block library"
         >
@@ -347,7 +347,7 @@
                     <input
                         x-ref="templateSearch"
                         x-model="templateSearch"
-                        type="search"
+                        type="text"
                         autocomplete="off"
                         spellcheck="false"
                         placeholder="Search blocks or tags"
