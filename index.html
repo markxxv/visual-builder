@@ -27,12 +27,17 @@
             @apply relative;
         }
 
-        [data-grid-section] > *:hover .grid-item-delete {
+        [data-grid-section] > *:hover .grid-item-delete,
+        [data-grid-section] > *:focus-within .grid-item-delete {
             @apply opacity-100;
         }
 
         .grid-item-delete {
-            @apply absolute top-2 right-2 opacity-0 transition-opacity z-[5] pointer-events-auto;
+            @apply absolute top-2 right-2 z-[5] flex h-7 w-7 items-center justify-center rounded-lg bg-white text-zinc-400 opacity-0 shadow-sm transition-all duration-150 pointer-events-auto;
+        }
+
+        .grid-item-delete:hover {
+            @apply bg-red-50 text-red-600;
         }
 
         .section-controls {
@@ -566,55 +571,123 @@
                 <!-- Content area -->
                 <div class="p-8">
                     <template x-for="(section, index) in sections" :key="section.id">
-                        <div class="relative group mb-6 p-6 border-2 border-transparent rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-all">
+                        <div class="group relative mb-6 rounded-xl p-6 transition-colors duration-150 hover:bg-zinc-50 focus-within:bg-zinc-50">
                             <!-- Section controls -->
-                            <div class="section-controls absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="section-controls absolute right-3 top-3 z-20 flex items-center rounded-xl bg-white p-1 text-zinc-500 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
                                 <!-- Column selector for grid sections -->
                                 <template x-if="section.hasColumnSelector">
                                     <div class="relative" x-data="{ open: false }">
-                                        <button 
+                                        <button
                                             @click="open = !open"
                                             @click.outside="open = false"
-                                            class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
-                                            title="Column Count"
+                                            type="button"
+                                            class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+                                            :class="open ? 'bg-zinc-100 text-zinc-950' : ''"
+                                            title="Columns"
+                                            aria-label="Change column count"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                <rect x="4" y="4" width="6" height="6" rx="1" />
-                                                <rect x="14" y="4" width="6" height="6" rx="1" />
-                                                <rect x="4" y="14" width="6" height="6" rx="1" />
-                                                <rect x="14" y="14" width="6" height="6" rx="1" />
-                                            </svg>
+                                            <i data-lucide="columns-3" class="h-3.5 w-3.5" aria-hidden="true"></i>
                                         </button>
-                                        
-                                        <!-- Popover -->
-                                        <div 
+
+                                        <!-- Column popover -->
+                                        <div
                                             x-show="open"
-                                            x-transition
-                                            class="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg p-3 z-50 min-w-[200px]"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 -translate-y-1"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            x-transition:leave="transition ease-in duration-75"
+                                            x-transition:leave-start="opacity-100 translate-y-0"
+                                            x-transition:leave-end="opacity-0 -translate-y-1"
+                                            class="absolute right-0 top-full z-50 mt-2 w-[188px] rounded-xl bg-white p-2 shadow-lg"
                                             style="display: none;"
                                         >
-                                            <p class="text-xs font-medium text-gray-700 mb-3">Columns per row:</p>
-                                            <div class="flex items-center justify-between bg-gray-50 rounded-lg p-1">
+                                            <div class="flex items-center justify-between px-1 pb-2 pt-0.5">
+                                                <span class="text-[11px] font-medium text-zinc-500">Columns</span>
+                                                <span class="text-[11px] tabular-nums text-zinc-400" x-text="section.columns"></span>
+                                            </div>
+
+                                            <div class="grid grid-cols-5 gap-1 rounded-lg bg-zinc-100 p-1">
                                                 <template x-for="col in [1, 2, 3, 4, 6]" :key="col">
-                                                    <label 
-                                                        class="flex items-center justify-center w-10 h-10 cursor-pointer rounded transition-colors"
-                                                        :class="section.columns === col ? 'bg-white border border-gray-300' : 'hover:bg-gray-100'"
+                                                    <label
+                                                        class="flex h-8 cursor-pointer items-center justify-center rounded-md text-[11px] font-medium transition-colors duration-150"
+                                                        :class="section.columns === col ? 'bg-white text-zinc-950 shadow-sm' : 'text-zinc-500 hover:text-zinc-950'"
                                                     >
-                                                        <input 
-                                                            type="radio" 
+                                                        <input
+                                                            type="radio"
                                                             :value="col"
                                                             x-model.number="section.columns"
                                                             @change="updateColumns(index, col)"
                                                             class="sr-only"
                                                         >
-                                                        <span 
-                                                            class="text-sm font-medium"
-                                                            :class="section.columns === col ? 'text-gray-900' : 'text-gray-500'"
-                                                            x-text="col"
-                                                        ></span>
+                                                        <span x-text="col"></span>
                                                     </label>
                                                 </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Add item -->
+                                <template x-if="section.hasColumnSelector">
+                                    <button
+                                        @click="addGridItem(index)"
+                                        type="button"
+                                        class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+                                        title="Add item"
+                                        aria-label="Add item"
+                                    >
+                                        <i data-lucide="plus" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                    </button>
+                                </template>
+
+                                <div class="mx-1 h-4 w-px bg-zinc-100"></div>
+
+                                <button
+                                    @click="moveSection(index, -1)"
+                                    :disabled="index === 0"
+                                    :class="index === 0 ? 'cursor-not-allowed text-zinc-300' : 'hover:bg-zinc-100 hover:text-zinc-950'"
+                                    type="button"
+                                    class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+                                    title="Move up"
+                                    aria-label="Move section up"
+                                >
+                                    <i data-lucide="arrow-up" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                </button>
+
+                                <button
+                                    @click="moveSection(index, 1)"
+                                    :disabled="index === sections.length - 1"
+                                    :class="index === sections.length - 1 ? 'cursor-not-allowed text-zinc-300' : 'hover:bg-zinc-100 hover:text-zinc-950'"
+                                    type="button"
+                                    class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+                                    title="Move down"
+                                    aria-label="Move section down"
+                                >
+                                    <i data-lucide="arrow-down" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                </button>
+
+                                <div class="mx-1 h-4 w-px bg-zinc-100"></div>
+
+                                <button
+                                    @click="removeSection(index)"
+                                    type="button"
+                                    class="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200"
+                                    title="Delete section"
+                                    aria-label="Delete section"
+                                >
+                                    <i data-lucide="trash-2" class="h-3.5 w-3.5" aria-hidden="true"></i>
+                                </button>
+                            </div>
+
+                            <!-- Editable content -->
+                            <div
+                                x-html="section.html"
+                                contenteditable="true"
+                                @blur="updateSection(index, $event)"
+                                class="rounded-lg outline-none"
+                            ></div>
+                        </div>
+                    </template>
                                             </div>
                                         </div>
                                     </div>
@@ -968,6 +1041,11 @@
                     this.$watch('sections', () => {
                         this.$nextTick(() => {
                             this.addDeleteButtonsToGridItems();
+                            window.lucide?.createIcons({
+                                attrs: {
+                                    'stroke-width': 1.7
+                                }
+                            });
                         });
                     }, { deep: true });
 
@@ -1007,9 +1085,11 @@
                         items.forEach((item) => {
                             if (!item.querySelector('.grid-item-delete')) {
                                 const deleteBtn = document.createElement('button');
-                                deleteBtn.className = 'grid-item-delete w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs';
-                                deleteBtn.innerHTML = '✕';
+                                deleteBtn.className = 'grid-item-delete';
+                                deleteBtn.innerHTML = '<i data-lucide="x" class="h-3.5 w-3.5" aria-hidden="true"></i>';
                                 deleteBtn.type = 'button';
+                                deleteBtn.title = 'Remove item';
+                                deleteBtn.setAttribute('aria-label', 'Remove item');
                                 item.appendChild(deleteBtn);
                             }
                         });
@@ -1169,13 +1249,23 @@
                     gridElement.appendChild(newItem);
                     
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'grid-item-delete w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs';
-                    deleteBtn.innerHTML = '✕';
+                    deleteBtn.className = 'grid-item-delete';
+                    deleteBtn.innerHTML = '<i data-lucide="x" class="h-3.5 w-3.5" aria-hidden="true"></i>';
                     deleteBtn.type = 'button';
+                    deleteBtn.title = 'Remove item';
+                    deleteBtn.setAttribute('aria-label', 'Remove item');
                     newItem.appendChild(deleteBtn);
                     
                     this.sections[index].html = sectionElements[index].querySelector('[contenteditable]').innerHTML;
                     this.saveState();
+
+                    this.$nextTick(() => {
+                        window.lucide?.createIcons({
+                            attrs: {
+                                'stroke-width': 1.7
+                            }
+                        });
+                    });
                 },
 
                 updateColumns(index, columns) {
