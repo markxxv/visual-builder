@@ -14,7 +14,7 @@
         }
 
         [contenteditable="true"]:focus {
-            @apply bg-yellow-100;
+            @apply bg-zinc-50;
         }
 
         .sr-only {
@@ -574,7 +574,6 @@
                         <div class="group relative mb-6 rounded-xl p-6 transition-colors duration-150 hover:bg-zinc-50 focus-within:bg-zinc-50">
                             <!-- Section controls -->
                             <div class="section-controls absolute right-3 top-3 z-20 flex items-center rounded-xl bg-white p-1 text-zinc-500 opacity-0 shadow-sm transition-all duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                                <!-- Column selector for grid sections -->
                                 <template x-if="section.hasColumnSelector">
                                     <div class="relative" x-data="{ open: false }">
                                         <button
@@ -589,7 +588,6 @@
                                             <i data-lucide="columns-3" class="h-3.5 w-3.5" aria-hidden="true"></i>
                                         </button>
 
-                                        <!-- Column popover -->
                                         <div
                                             x-show="open"
                                             x-transition:enter="transition ease-out duration-100"
@@ -627,7 +625,6 @@
                                     </div>
                                 </template>
 
-                                <!-- Add item -->
                                 <template x-if="section.hasColumnSelector">
                                     <button
                                         @click="addGridItem(index)"
@@ -685,58 +682,6 @@
                                 contenteditable="true"
                                 @blur="updateSection(index, $event)"
                                 class="rounded-lg outline-none"
-                            ></div>
-                        </div>
-                    </template>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <!-- Add item button for grid sections -->
-                                <template x-if="section.hasColumnSelector">
-                                    <button 
-                                        @click="addGridItem(index)"
-                                        class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
-                                        title="Add Block"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                            <path d="M12 5l0 14" />
-                                            <path d="M5 12l14 0" />
-                                        </svg>
-                                    </button>
-                                </template>
-                                
-                                <button 
-                                    @click="moveSection(index, -1)" 
-                                    :disabled="index === 0"
-                                    :class="index === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'"
-                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white transition-colors"
-                                >
-                                    ↑
-                                </button>
-                                <button 
-                                    @click="moveSection(index, 1)" 
-                                    :disabled="index === sections.length - 1"
-                                    :class="index === sections.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-100'"
-                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded bg-white transition-colors"
-                                >
-                                    ↓
-                                </button>
-                                <button 
-                                    @click="removeSection(index)"
-                                    class="w-8 h-8 flex items-center justify-center border border-red-300 rounded bg-white hover:bg-red-50 text-red-600 transition-colors"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <!-- Editable content -->
-                            <div 
-                                x-html="section.html" 
-                                contenteditable="true" 
-                                @blur="updateSection(index, $event)"
                             ></div>
                         </div>
                     </template>
